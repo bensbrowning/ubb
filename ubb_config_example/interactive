@@ -1,0 +1,2 @@
+# Local configs to be run in the interactive stage
+UBB_PS1_VERBOSE=1

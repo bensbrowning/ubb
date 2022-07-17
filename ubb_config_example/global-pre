@@ -1,0 +1,10 @@
+###
+# Local configs to be run in the global-pre stage
+###
+
+for bindir in ~/git/{,ben/}emptynet/$(hostname -s)/bin/ ~/git/{,mpt/}eh_tools ~/bin/ ~/git/{,deej,deej/deej}/deej/bin ; do
+if [[ -d "${bindir}" ]]; then
+    #echo Adding ${bindir} to path...
+    export PATH=${PATH}:${bindir}
+fi
+done

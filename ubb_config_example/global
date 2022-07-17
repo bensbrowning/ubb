@@ -1,0 +1,2 @@
+# Local configs to be run in the global stage
+UBB_PS1_VERBOSE=1
