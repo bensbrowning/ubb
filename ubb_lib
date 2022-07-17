@@ -1,0 +1,134 @@
+# 
+
+### Main flow functions are kept here for clarity
+
+# Global defs for all bash instances
+__ubb_global()
+{
+    # We might want to do things locally before this block
+    __ubb_local_config "global-pre"
+
+    __ubb_local_config "global"
+}
+
+# Interactive shells
+__ubb_interactive()
+{
+    # We might want to do things locally before this block
+    __ubb_local_config "interactive-pre"
+
+    # If we can turn on bash_completion, let's.
+    if [ -f /usr/local/etc/bash_completion ]; then
+        . /usr/local/etc/bash_completion
+    else
+        [[ ${UBB_DEBUG} > 0 ]] && echo "WARNING: bash completion not installed!"
+    fi
+
+
+    # enable color support of ls and also add handy aliases
+    if [ -x /usr/bin/dircolors ]; then
+        test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+        alias ls='ls --color=auto'
+        alias grep='grep --color=auto'
+        alias fgrep='fgrep --color=auto'
+        alias egrep='egrep --color=auto'
+    fi
+
+    # check the window size after each command and, if necessary,
+    # update the values of LINES and COLUMNS.
+    shopt -s checkwinsize
+
+    # 1k in mem
+    HISTSIZE=1000
+    # 10k history file
+    HISTFILESIZE=10000
+    # Append history instead of clobber
+    shopt -s histappend
+    # Multiple commands on one line show up as a single line
+    shopt -s cmdhist
+    # Set time format
+    HISTTIMEFORMAT='[%Y%m%d_%H%M%S]'
+    # save and refresh history across sessions
+    export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
+
+
+
+ 
+    __build_ps1
+
+    export KUBECONFIG=${KUBECONFIG:="${HOME}/.kube/config"}
+	__ubb_local_config "interactive"
+}
+__ubb_noninteractive()
+{
+    # We might want to do things locally before this block
+    __ubb_local_config "noninteractive-pre"
+
+	__ubb_local_config "noninteractive"
+}
+__ubb_login()
+{
+    # We might want to do things locally before this block
+    __ubb_local_config "login-pre"
+
+	__ubb_local_config "login"
+}
+__ubb_nonlogin()
+{
+    # We might want to do things locally before this block
+    __ubb_local_config "nonlogin-pre"
+
+	__ubb_local_config "nonlogin"
+}
+
+
+__ubb_local_config()
+{
+    if [ ! -d "${UBB_CONFIG_DIR}" ]; then
+        [[ ${UBB_DEBUG} > 0 ]] && echo "${UBB_CONFIG_DIR} not accessible, using defaults"
+    fi
+    if [ -r "${UBB_CONFIG_DIR}/${1}" ]; then
+        [[ ${UBB_DEBUG} > 0 ]] && echo "Sourcing ${UBB_CONFIG_DIR}/${1}"
+        source "${UBB_CONFIG_DIR}/${1}"
+    else
+        [[ ${UBB_DEBUG} > 1 ]] && echo "${UBB_CONFIG_DIR}/${1} not found or not readable"
+    fi
+
+}
+
+__build_ps1()
+{
+    UBB_PS1_VERBOSE=${UBB_PS1_VERBOSE:-0}
+    _UBB_KUBE_CONTEXT=$(__kube_context)
+
+    # Color defs for prompt
+    _COLOR_RESET="\[\033[00m\]"
+    _COLOR_BLUE="\[\033[01;34m\]"
+    _COLOR_YELLOW="\[\e[1;33m\]"
+    _COLOR_GREEN="\[\e[1;32m\]"
+    _COLOR_RED="\[\e[1;31m\]"
+    _COLOR_GREY="\[\e[1;30m\]"
+    _COLOR_PURPLE="\[\e[35m\]"
+
+    PS1=''
+    # echo "_UBB_KUBE_CONTEXT=${_UBB_KUBE_CONTEXT}"
+    if [[ "${_UBB_KUBE_CONTEXT}" =~ .*[\w\d].* ]]; then
+        # echo "_UBB_KUBE_CONTEXT=${_UBB_KUBE_CONTEXT} passed"
+        PS1="${_COLOR_RED}${_UBB_KUBE_CONTEXT}${_COLOR_RESET}\n"
+    fi
+    # todo, slimmer
+    PS1="${PS1}${_COLOR_GREY}[${_COLOR_PURPLE}$(date +"%y%m%d_%H%M%S")${_COLOR_GREY}] ${_COLOR_GREEN}\u@\h${_COLOR_GREY}:${_COLOR_BLUE}\W ${_COLOR_PURPLE}\$${_COLOR_RESET} "
+    export PS1
+}
+
+__kube_context()
+{
+    # Get current context
+    if [[ -f "${KUBECONFIG}" ]]; then
+        CONTEXT=$(grep "current-context:" "${KUBECONFIG}" | sed "s/current-context: //; s/\"//g; s/\n//")
+    fi
+    if [[ -n "$CONTEXT" ]]; then
+        echo "${CONTEXT}"
+    fi
+}
+
