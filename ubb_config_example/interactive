@@ -1,2 +1,4 @@
 # Local configs to be run in the interactive stage
 UBB_PS1_VERBOSE=1
+
+function tmux_auto () { (tmux -CC attach || tmux -CC) };

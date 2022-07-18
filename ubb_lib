@@ -6,6 +6,8 @@
 __ubb_global()
 {
     # We might want to do things locally before this block
+    # source user aliases first in case they are needed
+    __ubb_local_config "aliases"
     __ubb_local_config "global-pre"
 
     __ubb_local_config "global"
